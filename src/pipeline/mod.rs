@@ -9,17 +9,17 @@ use std::pin::Pin;
 /// A pipeline that is associated with either a client (single session) or a server (multiple sessions)
 /// IN type is what the inbound messages look like i.e. end result of reading and processing inbound traffic
 /// OUT type is what the outbound messages look like i.e. what we are writing to the network
-pub struct Pipeline<'a, IN, OUT, READ: Read, WRITE: Write> {
+pub struct Pipeline<IN, OUT, READ: Read, WRITE: Write> {
     // These 2 are just to retain type information
     _in: PhantomData<IN>,
     _out: PhantomData<OUT>,
-    handlers: Vec<Box<dyn for<'a> Handler<IN = dyn Any, OUT = dyn Any>>>,
+    handlers: Vec<Box<dyn Handler<IN = dyn Any, OUT = dyn Any>>>,
     reader: READ,
     writer: WRITE,
 }
 
-impl<'a, IN, OUT, READ: Read, WRITE: Write> Pipeline<'a, IN, OUT, READ, WRITE> {
-    pub fn new(capacity: usize, reader: READ, writer: WRITE) -> Pipeline<'a, IN, OUT, READ, WRITE> {
+impl<IN, OUT, READ: Read, WRITE: Write> Pipeline<IN, OUT, READ, WRITE> {
+    pub fn new(capacity: usize, reader: READ, writer: WRITE) -> Pipeline<IN, OUT, READ, WRITE> {
         Pipeline {
             _in: Default::default(),
             _out: Default::default(),
@@ -29,14 +29,11 @@ impl<'a, IN, OUT, READ: Read, WRITE: Write> Pipeline<'a, IN, OUT, READ, WRITE> {
         }
     }
 
-    pub fn handler_add_first<'a>(
-        &mut self,
-        handler: impl Handler<'a, IN = dyn Any, OUT = dyn Any>,
-    ) {
+    pub fn handler_add_first(&mut self, handler: impl Handler<IN = dyn Any, OUT = dyn Any>) {
         self.handlers.insert(0, handler);
     }
 
-    pub fn handler_add_last<'a>(&mut self, handler: impl Handler<'a, IN = dyn Any, OUT = dyn Any>) {
+    pub fn handler_add_last(&mut self, handler: impl Handler<IN = dyn Any, OUT = dyn Any>) {
         self.handlers.push(handler);
     }
 
